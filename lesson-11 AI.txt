@@ -1,0 +1,105 @@
+/* Практическое задание по теме “Оптимизация запросов”
+Создайте таблицу logs типа Archive. Пусть при каждом создании записи в таблицах users, 
+catalogs и products в таблицу logs помещается время и дата создания записи, название таблицы, 
+идентификатор первичного ключа и содержимое поля name.
+(по желанию) Создайте SQL-запрос, который помещает в таблицу users миллион записей.
+
+
+Практическое задание по теме “NoSQL”
+В базе данных Redis подберите коллекцию для подсчета посещений с определенных IP-адресов.
+При помощи базы данных Redis решите задачу поиска имени пользователя по электронному адресу и наоборот, поиск электронного адреса пользователя по его имени.
+Организуйте хранение категорий и товарных позиций учебной базы данных shop в СУБД MongoDB. */
+
+
+-- Оптимизация запросов -- 
+-- 1.
+CREATE TABLE logs (
+id INT NOT NULL AUTO_INCREMENT PRIMERY KEY,
+Created_ad DATETIME NOT NULL,
+name_table VARCHAR(32) NOT NULL,
+name VARCHAR(32) NOT NULL
+) ENGINE = Archive;
+
+-- СОЗДАЁМ ТРИГГЕР ДЛЯ USERS --
+
+DELIMITER //
+CREATE TRIGGER after_insert_USERS
+AFTER INSERT 
+ON users
+FOR EACH ROW
+BEGIN
+    INSERT INTO logs (Created_ad,name_table,name)
+    VALUES (NOW(),"users", name)
+END //
+DELIMITER ;
+
+-- СОЗДАЁМ ТРИГГЕР ДЛЯ CATALOGS --
+DELIMITER //
+CREATE TRIGGER after_insert_CATALOGS
+AFTER INSERT 
+ON catalogs
+FOR EACH ROW
+BEGIN
+    INSERT INTO logs (Created_ad,name_table,name)
+    VALUES (NOW(),"catalogs", name)
+END //
+DELIMITER ;
+
+-- СОЗДАЁМ ТРИГГЕР ДЛЯ PRODUCTS --
+DELIMITER //
+CREATE TRIGGER after_insert_PRODUCTS
+AFTER INSERT 
+ON products
+FOR EACH ROW
+BEGIN
+    INSERT INTO logs (Created_ad,name_table,name)
+    VALUES (NOW(),"products", name)
+END //
+DELIMITER ;
+
+
+
+-- 2. что- то из этих вариантов.....
+INSERT INTO users
+  WITH RECURSIVE
+    users(name) AS (
+       SELECT random()
+         FROM users
+        LIMIT 1000
+  )
+SELECT x FROM users;
+  
+
+CREATE table users_test from users ;
+
+insert into users_test (id, name, birthday_at , created_at, updated_at) select random(), random() , random(), random(), random() from generate_series(1, 1000000);
+
+INSERT INTO users_test
+    WITH RECURSIVE
+      users_test (id, name, birthday_at , created_at, updated_at) AS (
+      VALUES (1, random(), random(), random(), random()) UNION ALL 
+      SELECT id+1,random(),random(), random(), random() FROM users_test WHERE ID<1000000
+     );
+    select * from users_test;
+	
+	
+
+
+
+-- nosql
+- 1 HSET ipaddr 127.0.0.1 1
+
+
+
+-- 2 SET Alex mail@mail.ru
+SET mail@mail Alex
+GET Alex
+GET mail@mail.ru
+
+-- 3
+shop.products.insert({
+    name: "Intel Core i3-8100",
+    description: "Процессор для настольных персональных компьютеров, основанных на платформе Intel.",
+    price: 7890.00,
+    catalog: "Процессоры"
+})
